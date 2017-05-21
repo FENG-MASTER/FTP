@@ -24,6 +24,10 @@ public class FTPClient {
     private static PrintWriter dataWriter;
     private static Scanner userInputScanner;
 
+
+    private static MonitorInputSteam monitorInputSteam;
+    private static MonitorOutputSteam monitorOutputSteam;
+
     private static byte[] buff = new byte[1024];
 
 
@@ -36,6 +40,8 @@ public class FTPClient {
             System.out.println("格式 ipAddress port");
             return;
         }
+
+        initPath();
 
 
         InetAddress addr = null;
@@ -53,7 +59,7 @@ public class FTPClient {
             Socket ctrlSocket = new Socket(addr,port);
             ctrlScanner = new Scanner(ctrlSocket.getInputStream());
             ctrlWriter = new PrintWriter(ctrlSocket.getOutputStream(),true);
-            System.out.println("Control socket established to " + ctrlSocket.getInetAddress() + " port " + ctrlSocket.getPort());
+            System.out.println("控制连接已经建立在 " + ctrlSocket.getInetAddress() + " 端口: " + ctrlSocket.getPort());
             boolean flag=ctrlScanner.nextBoolean();
             if(!flag){
                 //连接失败
@@ -65,10 +71,14 @@ public class FTPClient {
             System.out.println("成功连接服务器 此次连接ID:" + connectionId);
 
             Socket dataSocket = new Socket(addr,port+1);//连接服务器的数据连接
-            dataIs = dataSocket.getInputStream();
-            dataOs = dataSocket.getOutputStream();
-            dataScanner = new Scanner(dataIs);
-            dataWriter = new PrintWriter(dataOs,true);
+            dataIs = new MonitorInputSteam(dataSocket.getInputStream(),Integer.MAX_VALUE);//流入流量监控流
+            monitorInputSteam= (MonitorInputSteam) dataIs;
+
+            dataOs = new MonitorOutputSteam(dataSocket.getOutputStream(),Integer.MAX_VALUE);//流出流量监控
+            monitorOutputSteam= (MonitorOutputSteam) dataOs;
+
+            dataScanner = new Scanner(monitorInputSteam);
+            dataWriter = new PrintWriter(monitorOutputSteam,true);
             dataWriter.println(connectionId.toString());//发送ID以便服务器识别
             System.out.println("数据连接成功,客户端IP: " + dataSocket.getInetAddress() + " 端口: " + dataSocket.getPort());
 
@@ -82,8 +92,6 @@ public class FTPClient {
 
                 userArg = new StringBuilder();
                 System.out.print("ftp> ");
-
-
                 inputLine = userInputScanner.nextLine().trim();
                 String[] commandStrings = inputLine.split(" ");
                 if (commandStrings != null && commandStrings.length > 0 && !commandStrings[0].trim().isEmpty()) {
@@ -170,6 +178,7 @@ public class FTPClient {
             int recv = 0;
             if (size > 0) {
                 while (len + recv < size) {
+                    System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
                     len += recv;
                     recv = dataIs.read(buff,0,buff.length);
                     fileOutputStream.write(buff,0,recv);
@@ -201,6 +210,7 @@ public class FTPClient {
             dataWriter.println(inFile.length());
             int recv = 0;
             while ((recv = fileInputStream.read(buff, 0, buff.length)) > 0) {
+                System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
                 dataOs.write(buff,0,recv);
             }
             dataOs.flush();
@@ -218,6 +228,14 @@ public class FTPClient {
         }
 
         return result;
+    }
+
+    private static void initPath(){
+        File dir=new File(fileDir);
+        if (!dir.exists()){
+            dir.mkdir();
+        }
+
     }
 
 }

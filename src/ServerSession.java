@@ -25,6 +25,9 @@ public class ServerSession implements Runnable {
 	private PrintWriter dataWriter;
 	private byte[] buff = new byte[1024];
 
+	private MonitorOutputSteam monitorOutputSteam;
+	private MonitorInputSteam monitorInputSteam;
+
 
 	
 	//store socket and get input stream scanner
@@ -37,8 +40,10 @@ public class ServerSession implements Runnable {
 			this.dataSocket.setSoTimeout(0);
 			controlScanner = new Scanner(controlSocket.getInputStream());
 			controlWriter = new PrintWriter(controlSocket.getOutputStream(),true);
-			dataIs = dataSocket.getInputStream();
-			dataOs = dataSocket.getOutputStream();
+			dataIs=new MonitorInputSteam(dataSocket.getInputStream(),Integer.MAX_VALUE);//流入流量监控
+			monitorInputSteam= (MonitorInputSteam) dataIs;
+			dataOs=new MonitorOutputSteam(dataSocket.getOutputStream(),Integer.MAX_VALUE);//流出流量监控
+			monitorOutputSteam= (MonitorOutputSteam) dataOs;
 			dataScanner = new Scanner(dataIs);
 			dataWriter = new PrintWriter(dataOs,true);
 		} catch (IOException e) {
@@ -107,6 +112,7 @@ public class ServerSession implements Runnable {
 				dataWriter.println(inFile.length());
 				int recv;				
 				while ((recv = fileStream.read(buff, 0, buff.length)) > 0) {
+					System.out.println("上传速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
 					dataOs.write(buff,0,recv);
 				}
 				dataOs.flush();
@@ -145,6 +151,7 @@ public class ServerSession implements Runnable {
 			int recv = 0;
 			if (size > 0) {
 				while(len + recv < size) {
+					System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
 					len += recv;
 					recv = dataIs.read(buff, 0, buff.length);
 					fileStream.write(buff,0,recv);

@@ -7,7 +7,7 @@ import java.util.Random;
 
 
 /**
- * 命令传输线程
+ * 命令传输线程+
  */
 public class ControlLinkHandler implements Runnable {
 	
