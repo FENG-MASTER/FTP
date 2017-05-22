@@ -123,6 +123,7 @@ public class ServerSession implements Runnable {
 				System.out.println("Error receiving file." + e);
 			}			
 		} else {
+			dataWriter.println(0);
 			System.out.println("File " + inFile + " does not exist.");
 		}
 		return result;
@@ -137,7 +138,7 @@ public class ServerSession implements Runnable {
 		boolean result = false;
 		String fileName = dataScanner.nextLine();
 		try {
-			
+			System.out.printf(fileName+"\n");
 			//set up the output file
 			File outFile = new File(FTPServer.getFileFullPath(fileName));
 			if (outFile.exists())
@@ -147,16 +148,23 @@ public class ServerSession implements Runnable {
 			
 			//read and write the file data
 			long len = 0;
-			long size = dataScanner.nextLong();
+			long size = Long.parseLong(dataScanner.nextLine());
 			int recv = 0;
 			if (size > 0) {
 				while(len + recv < size) {
-					System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
-					len += recv;
-					recv = dataIs.read(buff, 0, buff.length);
+					System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
+					//System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
+
+
+					recv = monitorInputSteam.read(buff, 0, buff.length);
+					if (recv==-1){
+						break;
+					}
 					fileStream.write(buff,0,recv);
+					len += recv;
 				}
 			}
+			fileStream.flush();
 			
 			fileStream.close();
 			result = true;			

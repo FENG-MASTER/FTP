@@ -27,7 +27,7 @@ public class MonitorOutputSteam extends FilterOutputStream {
         synchronized (out){
             int avaliable = check();
             if(avaliable == 0){
-                waitForAvailable();
+           //     waitForAvailable();
                 avaliable = check();
             }
 
@@ -45,7 +45,7 @@ public class MonitorOutputSteam extends FilterOutputStream {
         synchronized (out){
             int avaliable = check();
             if(avaliable == 0){
-                waitForAvailable();
+            //    waitForAvailable();
                 avaliable = check();
             }
 

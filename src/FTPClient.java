@@ -201,19 +201,28 @@ public class FTPClient {
 
     private static boolean do_put(String fileName) {
         boolean result = false;
-
-        File inFile = new File(fileName);
+        System.out.printf(fileName+"\n");
+        File inFile = new File(fileDir+fileName);
         try {
             FileInputStream fileInputStream = new FileInputStream(inFile);
             ctrlWriter.println("PUT");
+            ctrlWriter.flush();
             dataWriter.println(fileName);
+            dataWriter.flush();
             dataWriter.println(inFile.length());
+            dataWriter.flush();
+            int len=0;
             int recv = 0;
             while ((recv = fileInputStream.read(buff, 0, buff.length)) > 0) {
-                System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
+                //System.out.printf(new String(buff));
+                len+=recv;
+               // System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
                 dataOs.write(buff,0,recv);
+                dataOs.flush();
+                System.out.printf("len:"+len+"  recv:"+recv+"\n");
             }
             dataOs.flush();
+            System.out.printf("!!!!!!!!!!!!");
             fileInputStream.close();
             if (ctrlScanner.next().equals("OK")) {
                 result = true;

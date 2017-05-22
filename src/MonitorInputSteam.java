@@ -27,7 +27,7 @@ public class MonitorInputSteam extends FilterInputStream {
         synchronized(in){
             int avaliable = check();
             if(avaliable == 0){
-                waitForAvailable();
+           //     waitForAvailable();
                 avaliable = check();
             }
             int value = in.read();
@@ -45,7 +45,7 @@ public class MonitorInputSteam extends FilterInputStream {
         synchronized(in){
             int avaliable = check();
             if(avaliable == 0){
-                waitForAvailable();
+        //        waitForAvailable();
                 avaliable = check();
             }
             int n = in.read(b, off, Math.min(len, avaliable));
