@@ -44,7 +44,7 @@ public class ServerSession implements Runnable {
 			dataWriter = new PrintWriter(monitorOutputSteam,true);
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new IllegalStateException("Problem getting input and/or outputsreams for data and/or control sockets:" + e);
+			throw new IllegalStateException("sockets流初始化失败" + e);
 		}
 	}
 	
@@ -56,7 +56,7 @@ public class ServerSession implements Runnable {
 		String cmd = controlScanner.next();
 		
 		while (!cmd.equals("CLOSE")) {
-			System.out.println("Recieved command: " + cmd);
+			System.out.println("接收到命令 : " + cmd);
 			switch (cmd) {
 			case "LIST":
 				do_list();
@@ -76,7 +76,7 @@ public class ServerSession implements Runnable {
 				}
 				break;
 			default:
-				System.out.println("Invalid socket control message received");
+				System.out.println("收到无效的命令");
 				controlWriter.println("INVALID");
 				break;				
 			}
@@ -84,18 +84,16 @@ public class ServerSession implements Runnable {
 
 		}
 		try {
-			System.out.println("Session ended from " + controlSocket.getInetAddress() +" port " + controlSocket.getPort());
+			System.out.println("会话结束: " + controlSocket.getInetAddress() +" port " + controlSocket.getPort());
 			controlSocket.close();
 			dataSocket.close();
 		} catch (IOException e) {
-			System.out.println("Problem closing control and/or data socket " + e);
+			System.out.println("关闭socket出错" + e);
 		}
 	}	
 
 	
-	/**
-	 * Sends an existing file to a client
-	 */
+
 	public boolean do_get() {		
 		boolean result = false;
 		String fname = controlScanner.nextLine().trim();
@@ -122,22 +120,19 @@ public class ServerSession implements Runnable {
 				}
 				monitorOutputSteam.flush();
 				fileStream.close();
-				System.out.println("sent file " + fname);
+				System.out.println("传输文件" + fname+" 成功");
 				result = true;
 			} catch (IOException e) {
-				System.out.println("Error receiving file." + e);
+				System.out.println("传输文件出错" + e);
 			}			
 		} else {
 			dataWriter.println(0);
-			System.out.println("File " + inFile + " does not exist.");
+			System.out.println("文件 " + inFile + " 未找到");
 		}
 		return result;
 	}
 	
-	/**
-	 * Client is putting a file on the server
-	 * @return
-	 */
+
 	public boolean do_put() {
 		
 		boolean result = false;
@@ -155,7 +150,6 @@ public class ServerSession implements Runnable {
 			long len = 0;
 			long size = Long.parseLong(dataScanner.nextLine());
 			int recv = 0;
-			System.out.printf("size:"+size);
 			if (size > 0) {
 				while(len < size) {
 					recv = monitorInputSteam.read(buff,0,buff.length);
@@ -174,15 +168,13 @@ public class ServerSession implements Runnable {
 			result = true;			
 			
 		} catch (IOException e) {
-			System.out.println("Problem creating output file stream: " + e);
+			System.out.println("创建文件失败 " + e);
 		}
 		
 		return result;		
 	}
 	
-	/**
-	 * List the contents of the directory and send them to the client
-	 */
+
 	public void do_list() {
 		Path currentPath = Paths.get(FTPServer.getFileFullPath(""));
 		File[] dirList = currentPath.toFile().listFiles();

@@ -187,14 +187,14 @@ public class FTPClient {
 
             fileOutputStream.close();
             if (ctrlScanner.next().equals("OK")) {
-                System.out.println("Received file " + fileName);
+                System.out.println("接收文件 " + fileName+" 完毕");
                 result = true;
             } else {
                 outFile.delete();
             }
 
         } catch (IOException e) {
-            System.out.println("Error while runing get: " +e);
+            System.out.println("GET执行期间发生错误" +e);
         }
         return result;
     }
@@ -231,13 +231,13 @@ public class FTPClient {
             if (ctrlScanner.next().equals("OK")) {
                 result = true;
             } else {
-                System.out.println("Problem sending file to server.");
+                System.out.println("发送文件失败");
             }
 
         } catch (FileNotFoundException e) {
-            System.out.println("File " + fileName + " was not found");
+            System.out.println("文件 " + fileName + " 未找到");
         } catch (IOException e) {
-            System.out.println("Problem transfering file for put: " + e);
+            System.out.println("PUT执行出错 " + e);
         }
 
         return result;
