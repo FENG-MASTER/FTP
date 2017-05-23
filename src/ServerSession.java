@@ -1,10 +1,6 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import com.sun.xml.internal.bind.marshaller.DataWriter;
+
+import java.io.*;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,8 +16,8 @@ public class ServerSession implements Runnable {
 	
 	
 	private Scanner dataScanner;
-	private InputStream dataIs;
-	private OutputStream dataOs;
+	private BufferedInputStream dataIs;
+	private BufferedOutputStream dataOs;
 	private PrintWriter dataWriter;
 	private byte[] buff = new byte[1024];
 
@@ -40,12 +36,12 @@ public class ServerSession implements Runnable {
 			this.dataSocket.setSoTimeout(0);
 			controlScanner = new Scanner(controlSocket.getInputStream());
 			controlWriter = new PrintWriter(controlSocket.getOutputStream(),true);
-			dataIs=new MonitorInputSteam(dataSocket.getInputStream(),Integer.MAX_VALUE);//流入流量监控
-			monitorInputSteam= (MonitorInputSteam) dataIs;
-			dataOs=new MonitorOutputSteam(dataSocket.getOutputStream(),Integer.MAX_VALUE);//流出流量监控
-			monitorOutputSteam= (MonitorOutputSteam) dataOs;
-			dataScanner = new Scanner(dataIs);
-			dataWriter = new PrintWriter(dataOs,true);
+			dataIs=new BufferedInputStream(dataSocket.getInputStream());
+			monitorInputSteam= new MonitorInputSteam(dataIs);
+			dataOs=new BufferedOutputStream(dataSocket.getOutputStream());
+			monitorOutputSteam=new MonitorOutputSteam(dataOs);
+			dataScanner = new Scanner(monitorInputSteam);
+			dataWriter = new PrintWriter(monitorOutputSteam,true);
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new IllegalStateException("Problem getting input and/or outputsreams for data and/or control sockets:" + e);
@@ -56,7 +52,7 @@ public class ServerSession implements Runnable {
 	//entry point for the control socket
 	@Override
 	public void run() {
-		
+
 		String cmd = controlScanner.next();
 		
 		while (!cmd.equals("CLOSE")) {
@@ -112,10 +108,18 @@ public class ServerSession implements Runnable {
 				dataWriter.println(inFile.length());
 				int recv;				
 				while ((recv = fileStream.read(buff, 0, buff.length)) > 0) {
-					System.out.println("上传速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
-					dataOs.write(buff,0,recv);
+
+					monitorOutputSteam.write(buff,0,recv);
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.printf("len:"+inFile.length()+"  recv:"+recv+"\n");
+					monitorOutputSteam.flush();
+					System.out.println("上传速度:"+monitorOutputSteam.getCurrentbps()+"bps");
 				}
-				dataOs.flush();
+				monitorOutputSteam.flush();
 				fileStream.close();
 				System.out.println("sent file " + fname);
 				result = true;
@@ -150,20 +154,18 @@ public class ServerSession implements Runnable {
 			long len = 0;
 			long size = Long.parseLong(dataScanner.nextLine());
 			int recv = 0;
+			System.out.printf("size:"+size);
 			if (size > 0) {
-				while(len + recv < size) {
-					System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
-					//System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
-
-
-					recv = monitorInputSteam.read(buff, 0, buff.length);
-					if (recv==-1){
-						break;
-					}
+				while(len < size) {
+					recv = monitorInputSteam.read(buff,0,buff.length);
 					fileStream.write(buff,0,recv);
+					fileStream.flush();
 					len += recv;
+					System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
+					//System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
 				}
 			}
+			System.out.printf("文件传输完毕");
 			fileStream.flush();
 			
 			fileStream.close();

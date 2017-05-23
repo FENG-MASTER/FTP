@@ -22,12 +22,16 @@ public class MonitorInputSteam extends FilterInputStream {
         this.timestamp = System.currentTimeMillis();
     }
 
+    public MonitorInputSteam(InputStream in){
+        this(in,Integer.MAX_VALUE);
+    }
+
     @Override
     public int read() throws IOException {
         synchronized(in){
             int avaliable = check();
             if(avaliable == 0){
-           //     waitForAvailable();
+                waitForAvailable();
                 avaliable = check();
             }
             int value = in.read();
@@ -45,10 +49,10 @@ public class MonitorInputSteam extends FilterInputStream {
         synchronized(in){
             int avaliable = check();
             if(avaliable == 0){
-        //        waitForAvailable();
+                waitForAvailable();
                 avaliable = check();
             }
-            int n = in.read(b, off, Math.min(len, avaliable));
+            int n = in.read(b, off, len);
             update(n);
             return n;
         }

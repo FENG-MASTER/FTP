@@ -22,16 +22,20 @@ public class MonitorOutputSteam extends FilterOutputStream {
         this.timestamp = System.currentTimeMillis();
     }
 
+    public MonitorOutputSteam(OutputStream out){
+        this(out,Integer.MAX_VALUE);
+    }
+
     @Override
     public void write(int b) throws IOException {
         synchronized (out){
             int avaliable = check();
             if(avaliable == 0){
-           //     waitForAvailable();
+                waitForAvailable();
                 avaliable = check();
             }
 
-            super.write(b);
+            out.write(b);
             update(1);
         }
 
@@ -45,11 +49,11 @@ public class MonitorOutputSteam extends FilterOutputStream {
         synchronized (out){
             int avaliable = check();
             if(avaliable == 0){
-            //    waitForAvailable();
+                waitForAvailable();
                 avaliable = check();
             }
 
-            super.write(b,off,len);
+            out.write(b,off,len);
             update(len);
         }
 

@@ -1,11 +1,4 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ConnectException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -18,8 +11,8 @@ public class FTPClient {
     private static String fileDir="F://client-directory/";
     private static Scanner ctrlScanner;
     private static PrintWriter ctrlWriter;
-    private static InputStream dataIs;
-    private static OutputStream dataOs;
+    private static BufferedInputStream dataIs;
+    private static BufferedOutputStream dataOs;
     private static Scanner dataScanner;
     private static PrintWriter dataWriter;
     private static Scanner userInputScanner;
@@ -71,11 +64,14 @@ public class FTPClient {
             System.out.println("成功连接服务器 此次连接ID:" + connectionId);
 
             Socket dataSocket = new Socket(addr,port+1);//连接服务器的数据连接
-            dataIs = new MonitorInputSteam(dataSocket.getInputStream(),Integer.MAX_VALUE);//流入流量监控流
-            monitorInputSteam= (MonitorInputSteam) dataIs;
+            dataIs=new BufferedInputStream(dataSocket.getInputStream());
 
-            dataOs = new MonitorOutputSteam(dataSocket.getOutputStream(),Integer.MAX_VALUE);//流出流量监控
-            monitorOutputSteam= (MonitorOutputSteam) dataOs;
+
+            monitorInputSteam=new MonitorInputSteam(dataIs);
+
+            dataOs=new BufferedOutputStream(dataSocket.getOutputStream());
+
+            monitorOutputSteam=new MonitorOutputSteam(dataOs);
 
             dataScanner = new Scanner(monitorInputSteam);
             dataWriter = new PrintWriter(monitorOutputSteam,true);
@@ -177,13 +173,16 @@ public class FTPClient {
             long len = 0;
             int recv = 0;
             if (size > 0) {
-                while (len + recv < size) {
+                while (len < size) {
+                    System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
                     System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
+                    recv = monitorInputSteam.read(buff,0,buff.length);
                     len += recv;
-                    recv = dataIs.read(buff,0,buff.length);
                     fileOutputStream.write(buff,0,recv);
+                    fileOutputStream.flush();
                 }
             }
+            System.out.printf("文件传输完毕");
 
             fileOutputStream.close();
             if (ctrlScanner.next().equals("OK")) {
@@ -214,15 +213,18 @@ public class FTPClient {
             int len=0;
             int recv = 0;
             while ((recv = fileInputStream.read(buff, 0, buff.length)) > 0) {
-                //System.out.printf(new String(buff));
+
                 len+=recv;
-               // System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
-                dataOs.write(buff,0,recv);
-                dataOs.flush();
-                System.out.printf("len:"+len+"  recv:"+recv+"\n");
+                monitorOutputSteam.write(buff,0,recv);
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                monitorOutputSteam.flush();
+                System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
+               // System.out.printf("len:"+len+"  recv:"+recv+"\n");
             }
-            dataOs.flush();
-            System.out.printf("!!!!!!!!!!!!");
             fileInputStream.close();
             if (ctrlScanner.next().equals("OK")) {
                 result = true;
