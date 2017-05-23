@@ -62,7 +62,7 @@ public class MonitorInputSteam extends FilterInputStream {
         long now = System.currentTimeMillis();
         if(now - timestamp >= 1000){
             timestamp = now;
-            currentbps = bytesread;
+            //currentbps = bytesread;
             bytesread = 0;
             return maxbps;
         }else{
@@ -89,6 +89,9 @@ public class MonitorInputSteam extends FilterInputStream {
 
     private void update(int n){
         bytesread += n;
+        if (System.currentTimeMillis()!=timestamp){
+            currentbps= (int) (bytesread/(System.currentTimeMillis()-timestamp));
+        }
     }
 
     public int getCurrentbps(){

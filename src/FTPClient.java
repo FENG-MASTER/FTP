@@ -174,9 +174,10 @@ public class FTPClient {
             int recv = 0;
             if (size > 0) {
                 while (len < size) {
-                    System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
-                    System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
+                   // System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
+
                     recv = monitorInputSteam.read(buff,0,buff.length);
+                    System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
                     len += recv;
                     fileOutputStream.write(buff,0,recv);
                     fileOutputStream.flush();
@@ -221,8 +222,9 @@ public class FTPClient {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                monitorOutputSteam.flush();
                 System.out.printf("上载速度:"+monitorOutputSteam.getCurrentbps()+"bps\n");
+                monitorOutputSteam.flush();
+
                // System.out.printf("len:"+len+"  recv:"+recv+"\n");
             }
             fileInputStream.close();

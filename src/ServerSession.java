@@ -115,9 +115,10 @@ public class ServerSession implements Runnable {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					System.out.printf("len:"+inFile.length()+"  recv:"+recv+"\n");
-					monitorOutputSteam.flush();
+					//System.out.printf("len:"+inFile.length()+"  recv:"+recv+"\n");
 					System.out.println("上传速度:"+monitorOutputSteam.getCurrentbps()+"bps");
+					monitorOutputSteam.flush();
+
 				}
 				monitorOutputSteam.flush();
 				fileStream.close();
@@ -159,9 +160,10 @@ public class ServerSession implements Runnable {
 				while(len < size) {
 					recv = monitorInputSteam.read(buff,0,buff.length);
 					fileStream.write(buff,0,recv);
+					System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
 					fileStream.flush();
 					len += recv;
-					System.out.printf("下载速度:"+monitorInputSteam.getCurrentbps()+"bps\n");
+
 					//System.out.printf("len:"+len+"  recv:"+recv+"  size:"+size+"\n");
 				}
 			}
