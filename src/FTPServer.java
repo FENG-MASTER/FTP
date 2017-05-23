@@ -1,6 +1,6 @@
 import java.io.File;
 import java.io.IOException;
-
+import java.util.Scanner;
 
 
 public class FTPServer {
@@ -20,12 +20,17 @@ public class FTPServer {
 			//参考FTP的模型,启动两个线程,一个数据传输,一个命令传输
 			new Thread(new ControlLinkHandler(25060)).start();
 			new Thread(new DataLinkHandler(25061)).start();
-
+			new Thread(new ServerUI()).start();
 		} catch (IOException e) {
 			throw new IllegalStateException("初始化FTP服务器失败" + e);
 		}
 
+
 	}
+
+
+
+
 
 
 	private static void initPath(){

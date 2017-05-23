@@ -1,7 +1,4 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -20,7 +17,7 @@ public class IPManger {
 
     public static int maxLinkNum=3;
 
-    public static boolean banOpen=true;
+    public static boolean banOpen=false;
     public static boolean whiteOpen=false;
 
     public static ConcurrentHashMap<Long, Socket> connetingMap = new ConcurrentHashMap<Long,Socket>();
@@ -119,6 +116,35 @@ public class IPManger {
             }
         }
         return false;
+    }
+
+    public static void ban(String ip){
+        File file=new File(getConfigureDir()+"/"+banListFileName);
+
+        appendList(file,ip);
+
+        init();
+    }
+
+    public static void white(String ip){
+        File file=new File(getConfigureDir()+"/"+whiteListFileName);
+
+
+        appendList(file,ip);
+
+        init();
+    }
+
+    private  static void appendList(File file,String s){
+        try {
+            FileWriter writer=new FileWriter(file,true);
+            writer.write(s);
+            writer.write("\n");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
