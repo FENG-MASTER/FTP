@@ -162,9 +162,19 @@ public class FTPClient {
         boolean result = false;
         File outFile = new File(fileDir+fileName);
         try {
+
+            File p=new File(outFile.getAbsolutePath());
+            if(!p.exists()){
+                p.mkdirs();
+            }
+
+
             if(outFile.exists()) {
                 outFile.delete();
             }
+
+
+
             outFile.createNewFile();
             FileOutputStream fileOutputStream = new FileOutputStream(outFile);
 

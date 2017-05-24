@@ -52,7 +52,9 @@ public class ServerUI implements Runnable{
                     }
 
                     break;
-
+                default:
+                    System.out.println("无效指令,请重新输入.");
+                    break;
             }
             comand=scanner.next().trim().toUpperCase();
         }

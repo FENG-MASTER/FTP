@@ -176,12 +176,26 @@ public class ServerSession implements Runnable {
 	
 
 	public void do_list() {
-		Path currentPath = Paths.get(FTPServer.getFileFullPath(""));
+		listFile(FTPServer.getFileFullPath(""),0);
+		dataWriter.println("$");
+	}
+
+
+	private void listFile(String dir,int i){
+		Path currentPath = Paths.get(dir);
 		File[] dirList = currentPath.toFile().listFiles();
 		for (File f : dirList) {
-			dataWriter.println(f.getName());
+			if (f.isDirectory()){
+				dataWriter.println(f.getName());
+				listFile(f.getAbsolutePath(),i+1);
+			}else {
+				for (int ii=0;ii<i;ii++){
+					dataWriter.printf(" ");
+				}
+				dataWriter.println(f.getName());
+			}
 		}
-		dataWriter.println("$");
+
 	}
 
 
