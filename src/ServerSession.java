@@ -190,7 +190,7 @@ public class ServerSession implements Runnable {
 				listFile(f.getAbsolutePath(),i+1);
 			}else {
 				for (int ii=0;ii<i;ii++){
-					dataWriter.printf(" ");
+					dataWriter.printf("  ");
 				}
 				dataWriter.println(f.getName());
 			}
